@@ -1,6 +1,6 @@
 {
   "name": "mcp-patchwork",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MCP-driven synth control plane - translates musical intent into MIDI/SysEx",
   "type": "module",
   "main": "dist/mcp/server.js",
