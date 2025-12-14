@@ -78,15 +78,20 @@ export class MicroFreakDriver implements SynthAdapter {
   /** Initialize the driver and open MIDI port */
   async initialize(): Promise<boolean> {
     // Auto-detect MicroFreak if no port specified
+    console.error('[MicroFreak] Searching for MIDI port...');
     const targetPort = this.portName ?? findMidiOutput('microfreak') ?? findMidiOutput('arturia');
     
     if (!targetPort) {
-      console.error('[MicroFreak] No MIDI port found. Is MicroFreak connected?');
+      console.error('[MicroFreak] ERROR: No MIDI port found. Is MicroFreak connected?');
+      console.error('[MicroFreak] Looking for ports matching "microfreak" or "arturia"');
       return false;
     }
 
+    console.error(`[MicroFreak] Found MIDI port: ${targetPort}`);
     this.midiPort = new HardwareMidiPort(targetPort);
-    return this.midiPort.open();
+    const opened = this.midiPort.open();
+    console.error(`[MicroFreak] Port open: ${opened}`);
+    return opened;
   }
 
   getCapabilities(): SynthCapabilities {

@@ -42,15 +42,17 @@ const SERVER_VERSION = '0.1.0';
  * Initialize synth drivers and register them.
  */
 async function initializeSynths(): Promise<void> {
-  // For now, always create a MicroFreak driver (virtual port mode)
-  // TODO: Add actual hardware detection
+  console.error('[patchwork] Initializing synth drivers...');
   const microfreak = await createMicroFreakDriver();
   if (microfreak) {
     synthRegistry.register(microfreak);
-    console.error(`[patchwork] Registered synth: ${microfreak.name} (${microfreak.id})`);
+    console.error(`[patchwork] ✓ Registered synth: ${microfreak.name} (${microfreak.id})`);
   } else {
-    console.error('[patchwork] Warning: Failed to initialize MicroFreak driver');
+    console.error('[patchwork] ✗ Failed to initialize MicroFreak driver - check MIDI connection');
   }
+  
+  const synthCount = synthRegistry.getAll().length;
+  console.error(`[patchwork] Total synths registered: ${synthCount}`);
 }
 
 /**
