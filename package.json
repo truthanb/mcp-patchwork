@@ -35,12 +35,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/benjamintruthan/mcp-patchwork.git"
+    "url": "git+https://github.com/truthanb/mcp-patchwork.git"
   },
   "bugs": {
-    "url": "https://github.com/benjamintruthan/mcp-patchwork/issues"
+    "url": "https://github.com/truthanb/mcp-patchwork/issues"
   },
-  "homepage": "https://github.com/benjamintruthan/mcp-patchwork#readme",
+  "homepage": "https://github.com/truthanb/mcp-patchwork#readme",
   "engines": {
     "node": ">=22.0.0"
   },
