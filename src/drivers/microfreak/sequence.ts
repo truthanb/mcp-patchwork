@@ -85,11 +85,8 @@ export async function getSequence(
 ): Promise<MicroFreakSequence | null> {
   
   if (!port.opened) {
-    console.error('[MicroFreak Sequence] Port not open');
     return null;
   }
-
-  console.log('[MicroFreak Sequence] Reading sequence data (chunks 40-145)...');
 
   const sequenceChunks: number[][] = [];
   const FIRST_SEQUENCE_CHUNK = 40;
@@ -105,7 +102,6 @@ export async function getSequence(
     const request = buildPresetDataRequest(chunkNum);
     
     if (!port.sendSysEx(request)) {
-      console.error(`[MicroFreak Sequence] Failed to request chunk ${chunkNum}`);
       return null;
     }
 
@@ -149,15 +145,11 @@ export async function setSequence(
 ): Promise<boolean> {
   
   if (!port.opened) {
-    console.error('[MicroFreak Sequence] Port not open');
     return false;
   }
 
-  console.log('[MicroFreak Sequence] Writing sequence data...');
-
   // Validate sequence data
   if (!sequence.rawData || sequence.rawData.length !== 106) {
-    console.error('[MicroFreak Sequence] Invalid sequence data - expected 106 chunks');
     return false;
   }
 

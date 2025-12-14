@@ -22,7 +22,6 @@ export class VirtualMidiPort {
       this.output = new midi.Output();
       this.output.openVirtualPort(this.portName);
       this.isOpen = true;
-      console.log(`Virtual MIDI port "${this.portName}" opened`);
       return true;
     } catch (error) {
       console.error('Failed to open virtual MIDI port:', error);

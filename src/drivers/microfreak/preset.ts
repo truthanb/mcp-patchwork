@@ -64,17 +64,14 @@ export async function readPreset(
 ): Promise<MicroFreakPreset | null> {
   
   if (!port.opened) {
-    console.error('[MicroFreak Preset] Port not open');
     return null;
   }
 
   if (slot < 0 || slot > 255) {
-    console.error('[MicroFreak Preset] Invalid slot number:', slot);
     return null;
   }
 
   if (chunkCount < 40 || chunkCount > 146) {
-    console.error('[MicroFreak Preset] Invalid chunk count (must be 40-146):', chunkCount);
     return null;
   }
 
@@ -152,7 +149,6 @@ export async function readPreset(
           }
         }
       } catch (error) {
-        console.error('[MicroFreak Preset] Error parsing SysEx response:', error);
         port.disableSysExInput();
         reject(error);
       }
@@ -193,9 +189,6 @@ export async function writePreset(
   port: HardwareMidiPort,
   preset: MicroFreakPreset
 ): Promise<boolean> {
-  
-  console.error('[MicroFreak Preset] Preset writing not yet implemented');
-  console.error('[MicroFreak Preset] This requires understanding the complete SysEx write protocol');
   
   return false;
 
@@ -272,7 +265,6 @@ export function presetFromJSON(json: string): MicroFreakPreset | null {
     }
     return preset as MicroFreakPreset;
   } catch (error) {
-    console.error('[MicroFreak Preset] Failed to parse JSON:', error);
     return null;
   }
 }
@@ -323,7 +315,7 @@ export async function scanPresets(
         onProgress(slot + 1, totalSlots);
       }
     } catch (error) {
-      console.error(`[MicroFreak Preset] Failed to read slot ${slot}:`, error);
+      // Silently continue on errors
     }
     
     // Small delay between requests
@@ -347,12 +339,10 @@ export async function readPresetName(
 ): Promise<PresetMetadata | null> {
   
   if (!port.opened) {
-    console.error('[MicroFreak Preset] Port not open');
     return null;
   }
 
   if (slot < 0 || slot > 255) {
-    console.error('[MicroFreak Preset] Invalid slot number:', slot);
     return null;
   }
 

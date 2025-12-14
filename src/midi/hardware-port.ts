@@ -29,7 +29,6 @@ export class HardwareMidiPort {
           this.output.openPort(i);
           this.portIndex = i;
           this.isOpen = true;
-          console.log(`Opened hardware MIDI port: "${name}" (index ${i})`);
           return true;
         }
       }
