@@ -236,6 +236,49 @@ Load a preset from slot number (0-127).
 }
 ```
 
+### dump_preset
+Read a complete preset from a specific slot via SysEx. Returns preset metadata including name, category, firmware version, and whether the format is supported. Useful for inspecting existing presets.
+
+```json
+{
+  "name": "dump_preset",
+  "arguments": {
+    "synthId": "microfreak-1",
+    "slot": 100
+  }
+}
+```
+
+Note: Reading a preset takes ~2-3 seconds as it requests 146 data chunks via SysEx.
+
+### scan_presets
+Scan all 256 preset slots and return metadata for each (name, category, empty status). Much faster than dumping full presets as it only reads names.
+
+```json
+{
+  "name": "scan_presets",
+  "arguments": {
+    "synthId": "microfreak-1"
+  }
+}
+```
+
+Note: Scanning all presets takes ~1 minute. Results show which slots are empty/unused.
+
+### find_empty_slots
+Find all empty preset slots (INIT patches or uncategorized presets) that are safe to overwrite. Returns an array of slot numbers.
+
+```json
+{
+  "name": "find_empty_slots",
+  "arguments": {
+    "synthId": "microfreak-1"
+  }
+}
+```
+
+Useful workflow: Find empty slot → Load it → Init → Build sound → Manually save
+
 ## Sound Design Examples
 
 ### Dubstep Wobble Bass

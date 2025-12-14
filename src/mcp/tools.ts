@@ -52,6 +52,22 @@ export const setModulationSchema = z.object({
   synthId: z.string().optional().describe('ID of synth to set modulation on'),
 });
 
+/** Schema for dump_preset tool */
+export const dumpPresetSchema = z.object({
+  slot: z.number().int().min(0).max(255).describe('Preset slot number (0-255)'),
+  synthId: z.string().optional().describe('ID of synth to dump preset from'),
+});
+
+/** Schema for scan_presets tool */
+export const scanPresetsSchema = z.object({
+  synthId: z.string().optional().describe('ID of synth to scan presets from'),
+});
+
+/** Schema for find_empty_slots tool */
+export const findEmptySlotsSchema = z.object({
+  synthId: z.string().optional().describe('ID of synth to search for empty slots'),
+});
+
 /** Schema for create_sequence tool */
 export const createSequenceSchema = z.object({
   steps: z.array(z.object({
@@ -269,4 +285,53 @@ export const toolDefinitions = [
       },
       required: ['source', 'destination', 'amount'],
     },
-  },];
+  },
+  {
+    name: 'dump_preset',
+    description: 'Read a complete preset from a specific slot on the synth via SysEx. Returns all preset data including name, category, and parameter values. This is useful for inspecting existing presets to understand their construction.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        slot: {
+          type: 'number',
+          minimum: 0,
+          maximum: 255,
+          description: 'Preset slot number (0-255)',
+        },
+        synthId: {
+          type: 'string',
+          description: 'ID of synth to dump preset from',
+        },
+      },
+      required: ['slot'],
+    },
+  },
+  {
+    name: 'scan_presets',
+    description: 'Scan all 256 preset slots and return metadata (name, category, empty status) for each. This is useful for finding available slots or browsing presets. Much faster than dumping full presets.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        synthId: {
+          type: 'string',
+          description: 'ID of synth to scan presets from',
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'find_empty_slots',
+    description: 'Find all empty/unused preset slots on the synth. Returns slot numbers for INIT patches or uncategorized presets that are safe to overwrite. Useful for finding a place to save new sounds.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        synthId: {
+          type: 'string',
+          description: 'ID of synth to search for empty slots',
+        },
+      },
+      required: [],
+    },
+  },
+];

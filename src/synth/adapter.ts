@@ -93,6 +93,18 @@ export interface SynthAdapter {
   getModMatrixCapabilities?(): import('./types.js').ModMatrixCapabilities;
 
   /**
+   * Get driver-specific documentation resources.
+   * Returns array of resources (MIDI reference, workflow guides, etc.)
+   * that should be exposed as MCP resources.
+   */
+  getDocumentationResources?(): Array<{
+    name: string;
+    description: string;
+    /** Relative path from driver directory */
+    path: string;
+  }>;
+
+  /**
    * Set a modulation amount in the mod matrix.
    * @param source Modulation source (e.g., 'LFO', 'Envelope')
    * @param destination Modulation destination (e.g., 'Cutoff', 'Pitch')

@@ -1,0 +1,33 @@
+# Source files (only publish dist/)
+src/
+tsconfig.json
+vitest.config.ts
+
+# Development files
+.vscode/
+analysis/
+docs/
+
+# Test and documentation
+*.md
+!README.md
+TEST-INSTRUCTIONS.md
+HARDWARE-TEST-PLAN.md
+SEQUENCE-PROGRESS.md
+CHANGELOG.md
+PUBLISHING.md
+SETUP.md
+NPM-READY.md
+
+# Git and CI
+.git/
+.gitignore
+.github/
+
+# Node
+node_modules/
+npm-debug.log
+*.log
+
+# Build artifacts
+*.tsbuildinfo

@@ -506,6 +506,29 @@ export class MicroFreakDriver implements SynthAdapter {
   }
 
   /**
+   * Get documentation resources specific to MicroFreak.
+   * These will be exposed as MCP resources for LLM context.
+   */
+  getDocumentationResources(): Array<{
+    name: string;
+    description: string;
+    path: string;
+  }> {
+    return [
+      {
+        name: 'MIDI Reference',
+        description: 'Complete MIDI CC and NRPN reference for Arturia MicroFreak including oscillator mappings, mod matrix, and usage examples',
+        path: '../../docs/microfreak-midi-reference.md',
+      },
+      {
+        name: 'Preset Workflow',
+        description: 'Guide for reading presets from hardware, scanning slots, finding empty slots, and building new sounds',
+        path: '../../docs/preset-workflow.md',
+      },
+    ];
+  }
+
+  /**
    * Write a sequence directly to the MicroFreak via SysEx.
    * First loads preset 1 to establish edit buffer, then overwrites sequence chunks.
    */

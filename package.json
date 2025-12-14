@@ -1,9 +1,17 @@
 {
-  "name": "patchwork",
+  "name": "mcp-patchwork",
   "version": "0.1.0",
   "description": "MCP-driven synth control plane - translates musical intent into MIDI/SysEx",
   "type": "module",
   "main": "dist/mcp/server.js",
+  "bin": {
+    "mcp-patchwork": "dist/mcp/server.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/mcp/server.js",
@@ -11,16 +19,31 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:midi": "node dist/scripts/test-midi.js",
-    "midi:learn": "node dist/scripts/midi-learn.js"
+    "midi:learn": "node dist/scripts/midi-learn.js",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
     "mcp",
+    "model-context-protocol",
     "midi",
     "synthesizer",
-    "microfreak"
+    "microfreak",
+    "sound-design",
+    "music-production"
   ],
-  "author": "",
-  "license": "TBD",
+  "author": "Benjamin Truthan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benjamintruthan/mcp-patchwork.git"
+  },
+  "bugs": {
+    "url": "https://github.com/benjamintruthan/mcp-patchwork/issues"
+  },
+  "homepage": "https://github.com/benjamintruthan/mcp-patchwork#readme",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.24.3",
     "ai": "^5.0.113",

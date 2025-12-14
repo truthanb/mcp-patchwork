@@ -8,8 +8,10 @@ import midi from 'midi';
 
 export class HardwareMidiPort {
   private output: midi.Output | null = null;
+  private input: midi.Input | null = null;
   private isOpen: boolean = false;
   private portIndex: number = -1;
+  private sysexCallback: ((message: number[]) => void) | null = null;
 
   constructor(private portName: string) {}
 
@@ -141,8 +143,64 @@ export class HardwareMidiPort {
     }
   }
 
+  /**
+   * Enable SysEx input listening.
+   * Opens a MIDI input port and calls the callback when SysEx messages arrive.
+   * @param callback Function to handle incoming SysEx messages
+   */
+  enableSysExInput(callback: (message: number[]) => void): boolean {
+    if (!this.isOpen) {
+      console.warn('Output port not open, cannot enable SysEx input');
+      return false;
+    }
+
+    try {
+      this.input = new midi.Input();
+      const count = this.input.getPortCount();
+      
+      // Find matching input port (same name as output)
+      for (let i = 0; i < count; i++) {
+        const name = this.input.getPortName(i);
+        if (name.toLowerCase().includes(this.portName.toLowerCase())) {
+          this.input.openPort(i);
+          this.sysexCallback = callback;
+          
+          // Set up message listener
+          this.input.on('message', (deltaTime: number, message: number[]) => {
+            // Check if it's a SysEx message (starts with 0xF0)
+            if (message[0] === 0xF0 && this.sysexCallback) {
+              this.sysexCallback(message);
+            }
+          });
+          
+          console.log(`Enabled SysEx input on: "${name}" (index ${i})`);
+          return true;
+        }
+      }
+
+      console.error(`No MIDI input port found matching "${this.portName}"`);
+      return false;
+    } catch (error) {
+      console.error('Failed to enable SysEx input:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Disable SysEx input listening.
+   */
+  disableSysExInput(): void {
+    if (this.input) {
+      this.input.closePort();
+      this.input = null;
+      this.sysexCallback = null;
+      console.log('SysEx input disabled');
+    }
+  }
+
   /** Close the MIDI port */
   close(): void {
+    this.disableSysExInput();
     if (this.isOpen && this.output) {
       this.output.closePort();
       this.isOpen = false;

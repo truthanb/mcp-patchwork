@@ -5,22 +5,34 @@ LLM-friendly MIDI control plane for synthesizers. Natural language → sound des
 
 ## Features
 
-- **7 MCP Tools**: Complete synth control (list, describe, set params, modulation, presets, init)
+- **10 MCP Tools**: Complete synth control including preset inspection and scanning
 - **NRPN Support**: 14-bit parameter control for smooth modulation amounts  
 - **Full Mod Matrix**: 5 sources × 7 destinations = 35 routing possibilities
+- **SysEx Preset Reading**: Dump and inspect any preset slot from hardware
 - **Dynamic Resources**: Synth capabilities exposed as MCP resources (param maps, MIDI reference)
 - **Type-Safe**: Full TypeScript implementation with strict validation
 - **Hardware-First**: Direct MIDI communication, no DAW required
 
 ## Quick Start
+Connect via MCP client (Claude Desktop, etc.) with your MicroFreak connected, and control it using natural language:
 
-```bash
-npm install
-npm run build
-npm run dev  # Starts MCP server on stdio
+```
+"Create a warm bass sound with slow filter modulation"
+"Make a plucky lead with fast decay"
+"Set up a pad with LFO on the filter"
 ```
 
-Connect via MCP client (Claude Desktop, etc.) and control your MicroFreak:
+Or use the tools directly:
+
+Connect via MCP client (Claude Desktop, etc.) with your MicroFreak connected, and control it using natural language:
+
+```
+"Create a warm bass sound with slow filter modulation"
+"Make a plucky lead with fast decay"  
+"Set up a pad with LFO on the filter"
+```
+
+Or use the tools directly:
 
 ```typescript
 // Create a kick drum
@@ -32,14 +44,12 @@ await set_modulation("Envelope", "Pitch", -0.35);
 await set_modulation("Envelope", "Cutoff", 0.5);
 ```
 
-## Architecture
+## Supported Hardware
 
-**patchwork** = MCP Server + SynthAdapter abstraction + Hardware MIDI
+Currently supports:
+- **Arturia MicroFreak** (via MIDI + SysEx)
 
-- **MCP Layer** (`src/mcp/`): 7 tools + 2 resources, stdio transport
-- **Synth Abstraction** (`src/synth/`): Generic parameter interface, driver-agnostic
-- **MIDI Layer** (`src/midi/`): CC + NRPN + SysEx message building, hardware port management
-- **MicroFreak Driver** (`src/drivers/microfreak/`): 22 oscillator types, full mod matrix, param mappings, preset structure
+Extensible architecture allows adding new synths via the `SynthAdapter` interface.
 
 ## MCP Tools
 
@@ -51,7 +61,10 @@ await set_modulation("Envelope", "Cutoff", 0.5);
 | `set_synth_feature` | Set oscillator/filter type |
 | `set_modulation` | Route mod source → destination (-1.0 to 1.0) |
 | `init` | Reset synth to baseline (zero mods, neutral envelopes) |
-| `load_preset` | Load preset from slot (0-127) |
+| `load_preset` | Load preset from slot (0-255) |
+| `dump_preset` | Read complete preset data from slot via SysEx |
+| `scan_presets` | Scan all 256 slots and return metadata |
+| `find_empty_slots` | Find unused/INIT preset slots safe to overwrite |
 
 ## MCP Resources
 
@@ -59,6 +72,7 @@ await set_modulation("Envelope", "Cutoff", 0.5);
 |----------|-------------|
 | `synth://<id>/params` | JSON param map with descriptions and tips |
 | `synth://<id>/midi-reference` | Complete MIDI CC/NRPN reference with examples |
+| `synth://<id>/preset-workflow` | Guide for reading presets, scanning slots, and building sounds |
 
 ## Tests
 
@@ -66,22 +80,41 @@ await set_modulation("Envelope", "Cutoff", 0.5);
 npm test  # 20 tests: CC/NRPN conversion, normalization, clamping
 ```
 
+## Architecture
+
+**mcp-patchwork** = MCP Server + SynthAdapter abstraction + Hardware MIDI
+
+- **MCP Layer** (`src/mcp/`): 10 tools + 2 resources, stdio transport
+- **Synth Abstraction** (`src/synth/`): Generic parameter interface, driver-agnostic
+- **MIDI Layer** (`src/midi/`): CC + NRPN + SysEx message building, hardware port management
+- **MicroFreak Driver** (`src/drivers/microfreak/`): 22 oscillator types, full mod matrix, param mappings, preset structure
+
 ## Status
 
-- ✅ Full MicroFreak support (22 oscillators, mod matrix, presets)
-- ✅ NRPN 14-bit modulation control
-- ✅ SysEx protocol documented (preset dump/load structure)
+- ✅ Complete MCP tool suite (10 tools, 2 resources)
+- ✅ Preset reading (dump presets from hardware via SysEx)
+- ✅ MIDI input handling for SysEx responses
+- ✅ Preset scanning and empty slot detection
 - ✅ Sequence API abstraction (getSequence/setSequence)
-- ✅ MCP resource exposure
 - ✅ Type-safe parameter handling
-- 🔄 SysEx input handling (reading preset dumps from hardware)
-- 🔄 Sequence format reverse engineering (chunks 40-145)
+- 🔄 Sequence format reverse engineering (4-lane modulation)
+- 🔄 SysEx preset writing (save presets to hardware)
 - 🔄 Additional synth drivers (extensible via SynthAdapter)
+
+## Publishing
+
+To publish a new version to npm:
+
+```bash
+npm run build
+npm test
+npm version patch  # or minor/major
+npm publish
+```
 
 ## Documentation
 
 - [MIDI Reference](docs/microfreak-midi-reference.md) - Complete CC/NRPN/SysEx reference
 - [SysEx Implementation](docs/sysex-implementation.md) - Preset dump/load architecture
 - [Sequence Reverse Engineering](docs/sequence-reverse-engineering.md) - Decoding chunks 40-145
-- [Integration Summary](docs/integration-summary.md) - Research credits and comparisons
 
