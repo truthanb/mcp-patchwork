@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "patchwork": {
+      "command": "node",
+      "args": ["dist/mcp/server.js"],
+      "cwd": "/Users/benjamintruthan/Documents/GitHub/patchwork"
+    }
+  }
+}

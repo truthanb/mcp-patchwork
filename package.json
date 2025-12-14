@@ -1,0 +1,36 @@
+{
+  "name": "patchwork",
+  "version": "0.1.0",
+  "description": "MCP-driven synth control plane - translates musical intent into MIDI/SysEx",
+  "type": "module",
+  "main": "dist/mcp/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/mcp/server.js",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:midi": "node dist/scripts/test-midi.js",
+    "midi:learn": "node dist/scripts/midi-learn.js"
+  },
+  "keywords": [
+    "mcp",
+    "midi",
+    "synthesizer",
+    "microfreak"
+  ],
+  "author": "",
+  "license": "TBD",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.24.3",
+    "ai": "^5.0.113",
+    "midi": "^2.0.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/midi": "^2.0.4",
+    "@types/node": "^25.0.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
+  }
+}
