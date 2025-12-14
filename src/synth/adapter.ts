@@ -134,6 +134,12 @@ export interface SynthAdapter {
    */
   restorePreset?(data: Uint8Array): Promise<boolean>;
 
+  /**
+   * Check if the synth is currently connected and responsive.
+   * Returns true if MIDI port is available and open.
+   */
+  isConnected(): boolean;
+
   /** Clean up resources (MIDI ports, etc.) */
   disconnect(): Promise<void>;
 }

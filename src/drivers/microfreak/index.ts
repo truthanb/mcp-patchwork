@@ -1,3 +1,5 @@
+import { driverFactoryRegistry } from '../../synth/factory.js';
+
 export { MicroFreakDriver, createMicroFreakDriver, detectMicroFreak } from './driver.js';
 export { 
   MicroFreakCC, 
@@ -14,3 +16,12 @@ export {
   setSequence,
   encodeSequence,
 } from './sequence.js';
+
+// Register MicroFreak driver factory
+driverFactoryRegistry.register({
+  name: 'MicroFreak',
+  detect: async () => {
+    const { createMicroFreakDriver } = await import('./driver.js');
+    return createMicroFreakDriver();
+  },
+});

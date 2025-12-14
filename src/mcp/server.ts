@@ -32,8 +32,11 @@ import {
 } from './handlers.js';
 import { listResources, readResource } from './resources.js';
 import { synthRegistry } from '../synth/adapter.js';
-import { createMicroFreakDriver } from '../drivers/microfreak/index.js';
+import { driverFactoryRegistry } from '../synth/factory.js';
 import type { CanonicalParam } from '../synth/types.js';
+
+// Import drivers to trigger their factory registration
+import '../drivers/microfreak/index.js';
 
 const SERVER_NAME = 'patchwork';
 const SERVER_VERSION = '0.1.0';
@@ -43,16 +46,45 @@ const SERVER_VERSION = '0.1.0';
  */
 async function initializeSynths(): Promise<void> {
   console.error('[patchwork] Initializing synth drivers...');
-  const microfreak = await createMicroFreakDriver();
-  if (microfreak) {
-    synthRegistry.register(microfreak);
-    console.error(`[patchwork] ✓ Registered synth: ${microfreak.name} (${microfreak.id})`);
-  } else {
-    console.error('[patchwork] ✗ Failed to initialize MicroFreak driver - check MIDI connection');
+  
+  // Try all registered driver factories
+  for (const factory of driverFactoryRegistry.getAll()) {
+    console.error(`[patchwork] Checking for ${factory.name}...`);
+    const driver = await factory.detect();
+    if (driver && driver.isConnected()) {
+      synthRegistry.register(driver);
+      console.error(`[patchwork] ✓ Registered synth: ${driver.name} (${driver.id})`);
+    } else {
+      console.error(`[patchwork] ✗ ${factory.name} not found or not connected`);
+    }
   }
   
   const synthCount = synthRegistry.getAll().length;
   console.error(`[patchwork] Total synths registered: ${synthCount}`);
+}
+
+/**
+ * Rescan for new synths (hot-plug support).
+ * Checks all driver factories for newly available synths.
+ */
+async function rescanSynths(): Promise<void> {
+  // Try all registered driver factories
+  for (const factory of driverFactoryRegistry.getAll()) {
+    // Check if we already have a connected instance of this synth
+    const existing = synthRegistry.getAll().find(s => s.name === factory.name);
+    
+    if (!existing || !existing.isConnected()) {
+      const driver = await factory.detect();
+      if (driver && driver.isConnected()) {
+        // Remove old disconnected one if exists
+        if (existing) {
+          synthRegistry.unregister(existing.id);
+        }
+        synthRegistry.register(driver);
+        console.error(`[patchwork] ✓ Newly detected and registered: ${driver.name}`);
+      }
+    }
+  }
 }
 
 /**
@@ -101,6 +133,8 @@ function createServer(): Server {
 
       switch (name) {
         case 'list_synths':
+          // Rescan for newly connected synths before listing
+          await rescanSynths();
           result = await handleListSynths();
           break;
 

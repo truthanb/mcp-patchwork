@@ -573,6 +573,12 @@ export class MicroFreakDriver implements SynthAdapter {
     console.log('Sequence chunks sent to edit buffer.');
   }
 
+  isConnected(): boolean {
+    // Check if MIDI port is still available
+    const portAvailable = findMidiOutput('microfreak') || findMidiOutput('arturia');
+    return !!portAvailable && this.midiPort?.opened === true;
+  }
+
   async disconnect(): Promise<void> {
     if (this.midiPort) {
       this.midiPort.close();

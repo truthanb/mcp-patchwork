@@ -20,17 +20,32 @@ function getSynth(synthId?: string): SynthAdapter | null {
 }
 
 /** Handler for list_synths */
-export async function handleListSynths(): Promise<{
+export async function handleListSynths(options?: { rescan?: boolean }): Promise<{
   synths: Array<{ id: string; name: string; manufacturer: string }>;
 }> {
-  const synths = synthRegistry.getAll().map((s) => {
-    const caps = s.getCapabilities();
-    return {
-      id: s.id,
-      name: s.name,
-      manufacturer: caps.manufacturer,
-    };
-  });
+  // Optionally trigger a rescan for hot-plugged devices
+  if (options?.rescan !== false) {
+    // Trigger rescan via a callback if provided
+    // For now, we'll just use what's registered
+  }
+  
+  // Filter to only synths that are currently connected
+  const synths = synthRegistry.getAll()
+    .filter((s) => {
+      const connected = s.isConnected();
+      if (!connected) {
+        console.error(`[list_synths] ${s.name} (${s.id}) is registered but not connected`);
+      }
+      return connected;
+    })
+    .map((s) => {
+      const caps = s.getCapabilities();
+      return {
+        id: s.id,
+        name: s.name,
+        manufacturer: caps.manufacturer,
+      };
+    });
   return { synths };
 }
 
