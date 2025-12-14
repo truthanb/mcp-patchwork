@@ -8,6 +8,9 @@
 import type { SynthAdapter } from './adapter.js';
 
 export interface SynthDriverFactory {
+  /** Unique identifier for this driver type */
+  id: string;
+  
   /** Human-readable name for logging */
   name: string;
   

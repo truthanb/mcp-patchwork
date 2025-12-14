@@ -70,8 +70,8 @@ async function initializeSynths(): Promise<void> {
 async function rescanSynths(): Promise<void> {
   // Try all registered driver factories
   for (const factory of driverFactoryRegistry.getAll()) {
-    // Check if we already have a connected instance of this synth
-    const existing = synthRegistry.getAll().find(s => s.name === factory.name);
+    // Check if we already have a connected instance of this driver type
+    const existing = synthRegistry.getAll().find(s => s.driverType === factory.id);
     
     if (!existing || !existing.isConnected()) {
       const driver = await factory.detect();
@@ -79,6 +79,7 @@ async function rescanSynths(): Promise<void> {
         // Remove old disconnected one if exists
         if (existing) {
           synthRegistry.unregister(existing.id);
+          console.error(`[patchwork] Removed disconnected ${existing.name}`);
         }
         synthRegistry.register(driver);
         console.error(`[patchwork] ✓ Newly detected and registered: ${driver.name}`);

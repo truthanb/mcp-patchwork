@@ -25,6 +25,9 @@ export interface SynthAdapter {
 
   /** Human-readable name */
   readonly name: string;
+  
+  /** Driver type identifier (matches factory id) */
+  readonly driverType: string;
 
   /** Report what this synth can do */
   getCapabilities(): SynthCapabilities;

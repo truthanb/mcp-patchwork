@@ -62,6 +62,7 @@ export interface MicroFreakOptions {
 export class MicroFreakDriver implements SynthAdapter {
   readonly id: string;
   readonly name = 'Arturia MicroFreak';
+  readonly driverType = 'microfreak';
   
   private midiPort: MidiPort | null = null;
   private midiChannel: number;

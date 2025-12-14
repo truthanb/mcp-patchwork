@@ -19,6 +19,7 @@ export {
 
 // Register MicroFreak driver factory
 driverFactoryRegistry.register({
+  id: 'microfreak',
   name: 'MicroFreak',
   detect: async () => {
     const { createMicroFreakDriver } = await import('./driver.js');
