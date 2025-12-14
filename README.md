@@ -13,18 +13,81 @@ LLM-friendly MIDI control plane for synthesizers. Natural language → sound des
 - **Type-Safe**: Full TypeScript implementation with strict validation
 - **Hardware-First**: Direct MIDI communication, no DAW required
 
+## Installation
+
+```bash
+npm install -g mcp-patchwork
+# or clone and build locally:
+git clone https://github.com/truthanb/mcp-patchwork
+cd patchwork
+npm install
+npm run build
+```
+
+## MCP Configuration
+
+Configure the server in your MCP client's settings file:
+
+### Claude Desktop
+
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "patchwork": {
+      "command": "npx",
+      "args": ["-y", "mcp-patchwork"]
+    }
+  }
+}
+```
+
+Or if installed locally:
+
+```json
+{
+  "mcpServers": {
+    "patchwork": {
+      "command": "node",
+      "args": ["dist/mcp/server.js"],
+      "cwd": "/path/to/patchwork"
+    }
+  }
+}
+```
+
+### VS Code (Copilot)
+
+Edit `~/Library/Application Support/Code/User/mcp.json` (macOS) or `%APPDATA%\Code\User\mcp.json` (Windows):
+
+```json
+{
+  "mcpServers": {
+    "patchwork": {
+      "command": "npx",
+      "args": ["-y", "mcp-patchwork"]
+    }
+  }
+}
+```
+
+### Other MCP Clients
+
+Any MCP-compatible client can connect using the stdio transport:
+
+```json
+{
+  "command": "npx",
+  "args": ["-y", "mcp-patchwork"]
+}
+```
+
+After configuration, restart your MCP client. The patchwork tools should appear automatically when your MicroFreak is connected.
+
 ## Quick Start
-Connect via MCP client (Claude Desktop, etc.) with your MicroFreak connected, and control it using natural language:
 
-```
-"Create a warm bass sound with slow filter modulation"
-"Make a plucky lead with fast decay"
-"Set up a pad with LFO on the filter"
-```
-
-Or use the tools directly:
-
-Connect via MCP client (Claude Desktop, etc.) with your MicroFreak connected, and control it using natural language:
+Connect via MCP client with your MicroFreak connected, and control it using natural language:
 
 ```
 "Create a warm bass sound with slow filter modulation"
