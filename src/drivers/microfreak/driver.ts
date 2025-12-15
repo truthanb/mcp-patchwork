@@ -107,6 +107,7 @@ export class MicroFreakDriver implements SynthAdapter {
       fxAvailable: false, // No onboard FX
       supportsPresetDump: true, // TODO: Implement SysEx
       supportsPresetLoad: true,
+      presetSlotCount: 256,
       features: this.getFeatures(),
     };
   }

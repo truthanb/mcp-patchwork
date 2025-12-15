@@ -315,9 +315,6 @@ export async function scanPresets(
     } catch (error) {
       // Silently continue on errors
     }
-    
-    // Small delay between requests
-    await wait(20);
   }
   
   return presets;
@@ -400,15 +397,38 @@ export async function readPresetName(
  * @param onProgress - Progress callback
  * @returns Array of empty preset slot numbers
  */
+/**
+ * Find all empty preset slots.
+ * Searches in reverse (255 -> 0) since empty slots are more likely at the end.
+ * 
+ * @param port - MIDI port to use
+ * @param onProgress - Progress callback
+ * @returns Array of empty slot numbers (sorted ascending)
+ */
 export async function findEmptySlots(
   port: HardwareMidiPort,
   onProgress?: (current: number, total: number) => void
 ): Promise<number[]> {
   
-  const allPresets = await scanPresets(port, onProgress);
-  const emptySlots = allPresets
-    .filter(p => p.isEmpty)
-    .map(p => p.slot);
+  const emptySlots: number[] = [];
+  const totalSlots = 256;
   
-  return emptySlots;
+  // Search in reverse - empty slots are more likely at the end
+  for (let slot = 255; slot >= 0; slot--) {
+    try {
+      const metadata = await readPresetName(port, slot);
+      if (metadata?.isEmpty) {
+        emptySlots.push(slot);
+      }
+      
+      if (onProgress) {
+        onProgress(256 - slot, totalSlots);
+      }
+    } catch (error) {
+      // Silently continue
+    }
+  }
+  
+  // Return sorted ascending for user convenience
+  return emptySlots.sort((a, b) => a - b);
 }

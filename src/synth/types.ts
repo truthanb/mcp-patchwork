@@ -81,6 +81,8 @@ export interface SynthCapabilities {
   fxAvailable: boolean;
   supportsPresetDump: boolean;
   supportsPresetLoad: boolean;
+  /** Number of preset slots (e.g., 256 for MicroFreak) */
+  presetSlotCount?: number;
   /** Synth-specific features with their valid values */
   features: SynthFeature[];
 }

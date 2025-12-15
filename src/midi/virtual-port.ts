@@ -102,7 +102,7 @@ export class VirtualMidiPort {
     if (this.isOpen && this.output) {
       this.output.closePort();
       this.isOpen = false;
-      console.warn(`Virtual MIDI port "${this.portName}" closed`);
+
     }
   }
 

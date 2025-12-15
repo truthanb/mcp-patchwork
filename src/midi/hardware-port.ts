@@ -172,7 +172,6 @@ export class HardwareMidiPort {
             }
           });
           
-          console.warn(`Enabled SysEx input on: "${name}" (index ${i})`);
           return true;
         }
       }
@@ -193,7 +192,6 @@ export class HardwareMidiPort {
       this.input.closePort();
       this.input = null;
       this.sysexCallback = null;
-      console.warn('SysEx input disabled');
     }
   }
 
@@ -203,7 +201,6 @@ export class HardwareMidiPort {
     if (this.isOpen && this.output) {
       this.output.closePort();
       this.isOpen = false;
-      console.warn('Hardware MIDI port closed');
     }
   }
 
