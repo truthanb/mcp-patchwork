@@ -47,7 +47,7 @@ Patchwork is an MCP (Model Context Protocol) server that enables AI-assisted con
 - `set_modulation` - Configure modulation matrix routing
 - `init` - Reset synth to clean baseline state
 - `load_preset` - Load factory presets by slot number
-- `create_sequence` - (WIP) Create sequencer patterns
+- `dump_preset` - Read preset data via SysEx for analysis
 
 ### 2. Synth Adapter Interface (`src/synth/`)
 
@@ -93,9 +93,7 @@ interface SynthAdapter {
 - `driver.ts` - Main driver implementation
 - `param-map.ts` - Canonical param → CC/NRPN mapping
 - `mod-matrix.ts` - Modulation routing (14-bit NRPN)
-- `sequence.ts` - Sequence encoder/decoder
 - `preset.ts` - Preset structure definitions
-- `mbp-writer.ts` - Export to MIDI Control Center format
 
 **MIDI Implementation:**
 - 7-bit CC for basic parameters
@@ -132,44 +130,6 @@ class HardwareMidiPort {
   sendNRPN(channel: number, paramNumber: number, value: number): boolean;
   sendSysEx(message: number[]): boolean;
   sendProgramChange(channel: number, program: number): boolean;
-}
-```
-
-### 5. Sequence Reverse Engineering (`src/drivers/microfreak/sequence.ts`)
-
-**Discoveries:**
-
-**Preset Structure:**
-- 146 chunks × 32 bytes = 4,672 bytes total
-- Chunks 0-39: Sound parameters (1,280 bytes)
-- Chunks 40-69: Padding/metadata (960 bytes)
-- Chunks 70-145: Sequence steps (2,432 bytes)
-
-**Step Format (4-Lane Structure):**
-```
-Each chunk (32 bytes) = one sequencer step
-
-Lane Positions:
-- byte[1]:  modA (Modulation lane 1, 0-127)
-- byte[10]: note (MIDI note 36-96)
-- byte[19]: modC (Modulation lane 2, 0-127)
-- byte[28]: modD (Modulation lane 3, 0-127)
-- byte[9]:  gate (0=ON, 127=OFF)
-- byte[0]:  flags (common: 0, 2, 14, 32, 64, 96, 112, 120)
-- byte[24]: flags (common: 112)
-```
-
-**Encoder/Decoder:**
-```typescript
-encodeSequence(steps: SequenceStep[], length: number): number[][]
-// Returns 106 chunks (chunks 40-145)
-
-interface SequenceStep {
-  note?: number;      // MIDI note (0-127)
-  gate?: boolean;     // Step on/off
-  modA?: number;      // Modulation lane A (0-127)
-  modC?: number;      // Modulation lane C (0-127)
-  modD?: number;      // Modulation lane D (0-127)
 }
 ```
 

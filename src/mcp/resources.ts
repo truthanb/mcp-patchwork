@@ -74,8 +74,7 @@ export function listResources(): Array<{
     mimeType: string;
   }> = [];
 
-  // Only list resources for connected synths
-  for (const synth of synthRegistry.getAll().filter(s => s.isConnected())) {
+  for (const synth of synthRegistry.getAll()) {
     resources.push({
       uri: `synth://${synth.id}/params`,
       name: `${synth.name} Parameter Map`,
@@ -83,19 +82,14 @@ export function listResources(): Array<{
       mimeType: 'application/json',
     });
     
-    // Add driver-specific documentation resources
-    if (synth.getDocumentationResources) {
-      const docs = synth.getDocumentationResources();
-      for (const doc of docs) {
-        // Convert resource name to URI-friendly format
-        const uriKey = doc.name.toLowerCase().replace(/\s+/g, '-');
-        resources.push({
-          uri: `synth://${synth.id}/${uriKey}`,
-          name: `${synth.name} ${doc.name}`,
-          description: doc.description,
-          mimeType: 'text/markdown',
-        });
-      }
+    // Add MIDI reference resource for MicroFreak
+    if (synth.name === 'Arturia MicroFreak') {
+      resources.push({
+        uri: `synth://${synth.id}/midi-reference`,
+        name: `${synth.name} MIDI Reference`,
+        description: `Complete MIDI CC and NRPN reference for ${synth.name} including oscillator mappings, mod matrix, and usage examples`,
+        mimeType: 'text/markdown',
+      });
     }
   }
 
@@ -119,38 +113,21 @@ export function readResource(uri: string): { content: string; mimeType: string }
     };
   }
   
-  // Parse URI: synth://<synthId>/<doc-key> for driver-specific documentation
-  const docMatch = uri.match(/^synth:\/\/([^/]+)\/(.+)$/);
-  if (docMatch) {
-    const synthId = docMatch[1];
-    const docKey = docMatch[2];
-    
-    // Skip if it's the params resource (handled above)
-    if (docKey === 'params') {
-      return null;
-    }
-    
+  // Parse URI: synth://<synthId>/midi-reference
+  const midiRefMatch = uri.match(/^synth:\/\/([^/]+)\/midi-reference$/);
+  if (midiRefMatch) {
+    const synthId = midiRefMatch[1];
     const synth = synthRegistry.get(synthId);
-    if (!synth?.getDocumentationResources) {
-      return null;
-    }
+    if (!synth || synth.name !== 'Arturia MicroFreak') return null;
     
-    // Find the matching documentation resource
-    const docs = synth.getDocumentationResources();
-    const doc = docs.find(d => d.name.toLowerCase().replace(/\s+/g, '-') === docKey);
-    
-    if (!doc) {
-      return null;
-    }
-    
-    // Read the documentation file
+    // Read the MIDI reference markdown file synchronously
     try {
       const fs = require('fs');
       const path = require('path');
       const { fileURLToPath } = require('url');
       
       const __dirname = path.dirname(fileURLToPath(import.meta.url));
-      const docPath = path.join(__dirname, doc.path);
+      const docPath = path.join(__dirname, '../../docs/microfreak-midi-reference.md');
       const content = fs.readFileSync(docPath, 'utf-8');
       
       return {
@@ -158,7 +135,7 @@ export function readResource(uri: string): { content: string; mimeType: string }
         mimeType: 'text/markdown',
       };
     } catch (error) {
-      console.warn(`[Resources] Failed to read ${doc.name}:`, error);
+      console.error('[Resources] Failed to read MIDI reference:', error);
       return null;
     }
   }

@@ -9,13 +9,6 @@ export {
   getOscillatorTypeName,
   type OscillatorType,
 } from './param-map.js';
-export {
-  type MicroFreakSequence,
-  type SequenceStep,
-  getSequence,
-  setSequence,
-  encodeSequence,
-} from './sequence.js';
 
 // Register MicroFreak driver factory
 driverFactoryRegistry.register({

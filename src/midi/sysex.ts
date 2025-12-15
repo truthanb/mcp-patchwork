@@ -114,7 +114,7 @@ export const MicroFreakSysExCommand = {
 /**
  * Build a MicroFreak preset name request.
  * 
- * @param bank - Bank number (0 or 1)
+ * @param bank - Bank number (0-3)
  * @param preset - Preset number (0-127)
  * @param sequence - Sequence number (default 0x00)
  * @returns Complete SysEx message
@@ -134,7 +134,7 @@ export function buildPresetNameRequest(bank: number, preset: number, sequence: n
 /**
  * Build a MicroFreak preset dump request.
  * 
- * @param bank - Bank number (0 or 1)
+ * @param bank - Bank number (0-3)
  * @param preset - Preset number (0-127)
  * @returns Complete SysEx message
  */

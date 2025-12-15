@@ -7,8 +7,7 @@
 
 import { synthRegistry, type SynthAdapter } from '../synth/adapter.js';
 import type { CanonicalParam } from '../synth/types.js';
-import { encodeSequence, type SequenceStep } from '../drivers/microfreak/sequence.js';
-import { readPreset, scanPresets, findEmptySlots } from '../drivers/microfreak/preset.js';
+import { readPreset } from '../drivers/microfreak/preset.js';
 import type { HardwareMidiPort } from '../midi/hardware-port.js';
 
 /** Get a synth by ID, or the first available synth */
@@ -125,6 +124,16 @@ export async function handleLoadPreset(params: {
     };
   }
 
+  // Validate slot against synth capabilities (API uses 1-based to match hardware UI)
+  const caps = synth.getCapabilities();
+  const maxSlot = caps.presetSlotCount || 512;
+  if (params.slot < 1 || params.slot > maxSlot) {
+    return {
+      success: false,
+      message: `Invalid slot ${params.slot}. Valid range: 1-${maxSlot}`,
+    };
+  }
+
   if (!synth.loadPreset) {
     return {
       success: false,
@@ -132,7 +141,8 @@ export async function handleLoadPreset(params: {
     };
   }
 
-  const success = await synth.loadPreset(params.slot);
+  // Convert to 0-based for internal use
+  const success = await synth.loadPreset(params.slot - 1);
   return {
     success,
     message: success
@@ -222,70 +232,6 @@ export async function handleSetModulation(params: {
   return result;
 }
 
-/** Handler for create_sequence */
-export async function handleCreateSequence(params: {
-  steps: SequenceStep[];
-  synthId?: string;
-}): Promise<{ success: boolean; message?: string; error?: string }> {
-  const synth = getSynth(params.synthId);
-  if (!synth) {
-    return {
-      success: false,
-      error: params.synthId
-        ? `Synth "${params.synthId}" not found`
-        : 'No synths connected',
-    };
-  }
-
-  if (!synth.writeSequence) {
-    return {
-      success: false,
-      error: 'This synth does not support sequence writing',
-    };
-  }
-
-  try {
-    // First, reset the synth to init state
-    await synth.resetToInit();
-    
-    // Then write the sequence
-    await synth.writeSequence(params.steps);
-    
-    return {
-      success: true,
-      message: `Sequence sent to device (${params.steps.length} steps). Press PLAY on the sequencer.`,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-}
-
-/** Handler for get_sequence */
-export async function handleGetSequence(params: {
-  synthId?: string;
-}): Promise<{ success: boolean; sequence?: any; error?: string }> {
-  const synth = getSynth(params.synthId);
-  if (!synth) {
-    return {
-      success: false,
-      error: params.synthId
-        ? `Synth "${params.synthId}" not found`
-        : 'No synths connected',
-    };
-  }
-
-  // Reading sequences via SysEx is not yet implemented
-  // User must export via MIDI Control Center
-  return {
-    success: false,
-    error: 'Reading sequences via SysEx not yet implemented. ' +
-           'Export preset via MIDI Control Center to analyze sequence data.',
-  };
-}
-
 /** Handler for dump_preset */
 export async function handleDumpPreset(params: {
   slot: number;
@@ -301,6 +247,16 @@ export async function handleDumpPreset(params: {
     };
   }
 
+  // Validate slot number against synth capabilities (API uses 1-based to match hardware UI)
+  const caps = synth.getCapabilities();
+  const maxSlot = caps.presetSlotCount || 512;
+  if (params.slot < 1 || params.slot > maxSlot) {
+    return {
+      success: false,
+      error: `Invalid slot ${params.slot}. Valid range: 1-${maxSlot}`,
+    };
+  }
+
   // Get the MIDI port from the synth driver
   // Note: This assumes the synth has a midiPort property (true for MicroFreakDriver)
   const midiPort = (synth as any).midiPort as HardwareMidiPort;
@@ -312,7 +268,8 @@ export async function handleDumpPreset(params: {
   }
 
   try {
-    const preset = await readPreset(midiPort, params.slot, 146, (current, total) => {
+    // Convert to 0-based for internal use
+    const preset = await readPreset(midiPort, params.slot - 1, 146, (current, total) => {
       if (current % 20 === 0) {
         console.warn(`[MCP] Reading preset ${params.slot}: ${current}/${total} chunks`);
       }
@@ -347,92 +304,3 @@ export async function handleDumpPreset(params: {
   }
 }
 
-/** Handler for scan_presets */
-export async function handleScanPresets(params: {
-  synthId?: string;
-}): Promise<{ success: boolean; presets?: any[]; error?: string }> {
-  const synth = getSynth(params.synthId);
-  if (!synth) {
-    return {
-      success: false,
-      error: params.synthId
-        ? `Synth "${params.synthId}" not found`
-        : 'No synths connected',
-    };
-  }
-
-  const midiPort = (synth as any).midiPort as HardwareMidiPort;
-  if (!midiPort) {
-    return {
-      success: false,
-      error: 'Synth does not have a MIDI port (SysEx not supported)',
-    };
-  }
-
-  try {
-    const presets = await scanPresets(midiPort, (current, total) => {
-      if (current % 32 === 0) {
-        console.warn(`[MCP] Scanning presets: ${current}/${total}`);
-      }
-    });
-
-    return {
-      success: true,
-      presets: presets.map(p => ({
-        slot: p.slot,
-        name: p.name,
-        category: p.categoryName,
-        isEmpty: p.isEmpty,
-        bank: p.bank,
-        presetNumber: p.presetNumber,
-      })),
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: `Error scanning presets: ${error instanceof Error ? error.message : String(error)}`,
-    };
-  }
-}
-
-/** Handler for find_empty_slots */
-export async function handleFindEmptySlots(params: {
-  synthId?: string;
-}): Promise<{ success: boolean; slots?: number[]; error?: string }> {
-  const synth = getSynth(params.synthId);
-  if (!synth) {
-    return {
-      success: false,
-      error: params.synthId
-        ? `Synth "${params.synthId}" not found`
-        : 'No synths connected',
-    };
-  }
-
-  const midiPort = (synth as any).midiPort as HardwareMidiPort;
-  if (!midiPort) {
-    return {
-      success: false,
-      error: 'Synth does not have a MIDI port (SysEx not supported)',
-    };
-  }
-
-  try {
-    console.warn('[MCP] Starting scan of 256 preset slots (this takes ~10 seconds)...');
-    const emptySlots = await findEmptySlots(midiPort, (current, total) => {
-      if (current % 32 === 0) {
-        console.warn(`[MCP] Scanning for empty slots: ${current}/${total}`);
-      }
-    });
-
-    return {
-      success: true,
-      slots: emptySlots,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: `Error finding empty slots: ${error instanceof Error ? error.message : String(error)}`,
-    };
-  }
-}

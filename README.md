@@ -5,10 +5,11 @@ LLM-friendly MIDI control plane for synthesizers. Natural language → sound des
 
 ## Features
 
-- **10 MCP Tools**: Complete synth control including preset inspection and scanning
+- **8 MCP Tools**: Complete synth control including preset inspection
 - **NRPN Support**: 14-bit parameter control for smooth modulation amounts  
 - **Full Mod Matrix**: 5 sources × 7 destinations = 35 routing possibilities
-- **SysEx Preset Reading**: Dump and inspect any preset slot from hardware
+- **SysEx Preset Reading**: Dump and inspect any of 512 preset slots from hardware
+- **Bank Select Support**: Access all 4 banks (512 presets) via MIDI Bank Select
 - **Dynamic Resources**: Synth capabilities exposed as MCP resources (param maps, MIDI reference)
 - **Type-Safe**: Full TypeScript implementation with strict validation
 - **Hardware-First**: Direct MIDI communication, no DAW required
@@ -124,10 +125,10 @@ Extensible architecture allows adding new synths via the `SynthAdapter` interfac
 | `set_synth_feature` | Set oscillator/filter type |
 | `set_modulation` | Route mod source → destination (-1.0 to 1.0) |
 | `init` | Reset synth to baseline (zero mods, neutral envelopes) |
-| `load_preset` | Load preset from slot (0-255) |
-| `dump_preset` | Read complete preset data from slot via SysEx |
-| `scan_presets` | Scan all 256 slots and return metadata |
-| `find_empty_slots` | Find unused/INIT preset slots safe to overwrite |
+| `load_preset` | Load preset from slot (1-512, matches hardware) |
+| `dump_preset` | Read complete preset data via SysEx |
+
+
 
 ## MCP Resources
 
@@ -135,7 +136,6 @@ Extensible architecture allows adding new synths via the `SynthAdapter` interfac
 |----------|-------------|
 | `synth://<id>/params` | JSON param map with descriptions and tips |
 | `synth://<id>/midi-reference` | Complete MIDI CC/NRPN reference with examples |
-| `synth://<id>/preset-workflow` | Guide for reading presets, scanning slots, and building sounds |
 
 ## Tests
 
@@ -152,15 +152,15 @@ npm test  # 20 tests: CC/NRPN conversion, normalization, clamping
 - **MIDI Layer** (`src/midi/`): CC + NRPN + SysEx message building, hardware port management
 - **MicroFreak Driver** (`src/drivers/microfreak/`): 22 oscillator types, full mod matrix, param mappings, preset structure
 
-## Status
+## Status10
 
-- ✅ Complete MCP tool suite (10 tools, 2 resources)
+- ✅ Complete MCP tool suite (8 tools, 2 resources)
 - ✅ Preset reading (dump presets from hardware via SysEx)
+- ✅ 512-preset support with 4-bank MIDI Bank Select
 - ✅ MIDI input handling for SysEx responses
-- ✅ Preset scanning and empty slot detection
-- ✅ Sequence API abstraction (getSequence/setSequence)
 - ✅ Type-safe parameter handling
-- 🔄 Sequence format reverse engineering (4-lane modulation)
+- ✅ Hot-plug synth detection
+- 🔄 Sequence writing (SysEx write protocol not yet reverse engineered)
 - 🔄 SysEx preset writing (save presets to hardware)
 - 🔄 Additional synth drivers (extensible via SynthAdapter)
 

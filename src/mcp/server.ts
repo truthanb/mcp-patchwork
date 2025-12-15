@@ -24,11 +24,7 @@ import {
   handleSetSynthFeature,
   handleInit,
   handleSetModulation,
-  handleCreateSequence,
-  handleGetSequence,
   handleDumpPreset,
-  handleScanPresets,
-  handleFindEmptySlots,
 } from './handlers.js';
 import { listResources, readResource } from './resources.js';
 import { synthRegistry } from '../synth/adapter.js';
@@ -173,33 +169,9 @@ function createServer(): Server {
           );
           break;
 
-        case 'create_sequence':
-          result = await handleCreateSequence(
-            args as { steps: any[]; synthId?: string }
-          );
-          break;
-
-        case 'get_sequence':
-          result = await handleGetSequence(
-            args as { synthId?: string }
-          );
-          break;
-
         case 'dump_preset':
           result = await handleDumpPreset(
             args as { slot: number; synthId?: string }
-          );
-          break;
-
-        case 'scan_presets':
-          result = await handleScanPresets(
-            args as { synthId?: string }
-          );
-          break;
-
-        case 'find_empty_slots':
-          result = await handleFindEmptySlots(
-            args as { synthId?: string }
           );
           break;
 

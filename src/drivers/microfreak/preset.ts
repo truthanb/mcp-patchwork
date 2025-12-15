@@ -20,9 +20,9 @@ import {
  * MicroFreak preset structure.
  */
 export interface MicroFreakPreset {
-  /** Preset slot number (0-255) */
+  /** Preset slot number (0-511) */
   slot: number;
-  /** Bank number (0 or 1) */
+  /** Bank number (0-3) */
   bank: number;
   /** Preset number within bank (0-127) */
   presetNumber: number;
@@ -67,7 +67,7 @@ export async function readPreset(
     return null;
   }
 
-  if (slot < 0 || slot > 255) {
+  if (slot < 0 || slot > 511) {
     return null;
   }
 
@@ -75,7 +75,7 @@ export async function readPreset(
     return null;
   }
 
-  const bank = slot > 127 ? 1 : 0;
+  const bank = Math.floor(slot / 128);
   const presetNumber = slot % 128;
 
   console.warn(`[MicroFreak Preset] Reading slot ${slot} (bank ${bank}, preset ${presetNumber})`);
@@ -296,10 +296,10 @@ export async function scanPresets(
 ): Promise<PresetMetadata[]> {
   
   const presets: PresetMetadata[] = [];
-  const totalSlots = 256;
+  const totalSlots = 512;
   
   for (let slot = 0; slot < totalSlots; slot++) {
-    const bank = slot > 127 ? 1 : 0;
+    const bank = Math.floor(slot / 128);
     const presetNumber = slot % 128;
     
     try {
@@ -336,19 +336,25 @@ export async function readPresetName(
     return null;
   }
 
-  if (slot < 0 || slot > 255) {
+  if (slot < 0 || slot > 511) {
     return null;
   }
 
-  const bank = slot > 127 ? 1 : 0;
+  const bank = Math.floor(slot / 128);
   const presetNumber = slot % 128;
 
   return new Promise((resolve, reject) => {
+    let settled = false;
+    
     // Set up SysEx listener
     port.enableSysExInput((message) => {
+      if (settled) return;
+      
       try {
         const parsed = parsePresetNameResponse(message);
         if (parsed) {
+          settled = true;
+          clearTimeout(timeout);
           port.disableSysExInput();
           
           // Detect if preset is "empty" (INIT or factory default pattern)
@@ -369,23 +375,33 @@ export async function readPresetName(
           });
         }
       } catch (error) {
-        port.disableSysExInput();
-        reject(error);
+        if (!settled) {
+          settled = true;
+          clearTimeout(timeout);
+          port.disableSysExInput();
+          reject(error);
+        }
       }
     });
     
-    // Timeout after 2 seconds
+    // Timeout after 100ms (MicroFreak responds in ~10-20ms)
     const timeout = setTimeout(() => {
-      port.disableSysExInput();
-      reject(new Error(`Preset name read timeout for slot ${slot}`));
-    }, 2000);
+      if (!settled) {
+        settled = true;
+        port.disableSysExInput();
+        reject(new Error(`Preset name read timeout for slot ${slot}`));
+      }
+    }, 100);
     
     // Request preset name
     const nameRequest = buildPresetNameRequest(bank, presetNumber);
     if (!port.sendSysEx(nameRequest)) {
-      clearTimeout(timeout);
-      port.disableSysExInput();
-      reject(new Error('Failed to send preset name request'));
+      if (!settled) {
+        settled = true;
+        clearTimeout(timeout);
+        port.disableSysExInput();
+        reject(new Error('Failed to send preset name request'));
+      }
     }
   });
 }
@@ -411,10 +427,10 @@ export async function findEmptySlots(
 ): Promise<number[]> {
   
   const emptySlots: number[] = [];
-  const totalSlots = 256;
+  const totalSlots = 512;
   
   // Search in reverse - empty slots are more likely at the end
-  for (let slot = 255; slot >= 0; slot--) {
+  for (let slot = 511; slot >= 0; slot--) {
     try {
       const metadata = await readPresetName(port, slot);
       if (metadata?.isEmpty) {
@@ -422,7 +438,7 @@ export async function findEmptySlots(
       }
       
       if (onProgress) {
-        onProgress(256 - slot, totalSlots);
+        onProgress(512 - slot, totalSlots);
       }
     } catch (error) {
       // Silently continue

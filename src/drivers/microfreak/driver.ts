@@ -36,7 +36,6 @@ import {
   type ModSource,
   type ModDestination,
 } from './mod-matrix.js';
-import { encodeSequence, type SequenceStep } from './sequence.js';
 import { buildArturiaSysEx } from '../../midi/sysex.js';
 
 /** Interface for MIDI port (hardware or virtual) */
@@ -107,7 +106,7 @@ export class MicroFreakDriver implements SynthAdapter {
       fxAvailable: false, // No onboard FX
       supportsPresetDump: true, // TODO: Implement SysEx
       supportsPresetLoad: true,
-      presetSlotCount: 256,
+      presetSlotCount: 512,
       features: this.getFeatures(),
     };
   }
@@ -359,8 +358,15 @@ export class MicroFreakDriver implements SynthAdapter {
     if (!this.midiPort) {
       return false;
     }
-    // Program Change to select preset
-    return this.midiPort.sendProgramChange(this.midiChannel, slot & 0x7f);
+    // MicroFreak has 512 presets split across 4 banks (0-127 each)
+    const bank = (slot >> 7) & 0x03;  // Bank 0-3 for slots 0-511
+    const program = slot & 0x7f;      // Program within bank (0-127)
+    
+    // Send Bank Select (CC 0) then Program Change
+    if (!this.midiPort.sendCC(this.midiChannel, 0, bank)) {
+      return false;
+    }
+    return this.midiPort.sendProgramChange(this.midiChannel, program);
   }
 
   getParamDescriptions(): import('../../synth/types.js').ParamDescription[] {
@@ -499,6 +505,7 @@ export class MicroFreakDriver implements SynthAdapter {
       'Start with init tool to reset, then adjust one parameter at a time to understand its effect',
       'Keyboard hold (CC 64) sustains notes, useful for pads and drones',
       'Arp rate (CC 91/92) controls arpeggiator speed - experiment with free vs synced timing',
+      'MicroFreak has 512 preset slots (1-512). Try loading high-numbered presets (e.g., 400+) to find empty INIT patches',
     ];
   }
 
@@ -509,6 +516,7 @@ export class MicroFreakDriver implements SynthAdapter {
       'Keyboard hold: CC 64 acts as sustain pedal',
       'Filter types: LPF (low-pass), BPF (band-pass), HPF (high-pass) available',
       'Octave transpose: -3 to +3 octaves for pitch shifting',
+      'Preset banks: 512 total presets across 4 banks (Bank 0: 1-128, Bank 1: 129-256, Bank 2: 257-384, Bank 3: 385-512)',
     ];
   }
 
@@ -533,46 +541,6 @@ export class MicroFreakDriver implements SynthAdapter {
         path: '../../docs/preset-workflow.md',
       },
     ];
-  }
-
-  /**
-   * Write a sequence directly to the MicroFreak via SysEx.
-   * First loads preset 1 to establish edit buffer, then overwrites sequence chunks.
-   */
-  async writeSequence(steps: SequenceStep[]): Promise<void> {
-    if (!this.midiPort?.sendSysEx) {
-      throw new Error('MIDI port does not support SysEx');
-    }
-
-    // Step 1: Load preset 1 via Program Change to get it into edit buffer
-    console.warn('Loading preset 1 into edit buffer...');
-    this.midiPort.sendProgramChange(this.midiChannel, 0); // Preset 1 (0-indexed)
-    await new Promise(resolve => setTimeout(resolve, 100)); // Wait for preset to load
-
-    // Step 2: Encode the new sequence
-    const sequenceChunks = encodeSequence(steps, steps.length);
-    
-    // Step 3: Send ONLY the sequence chunks (chunks 70-145 of the preset)
-    // sequenceChunks[30-93] map to preset chunks 70-133 (the 64 sequence steps)
-    console.warn('Overwriting sequence data...');
-    
-    for (let i = 30; i < 94; i++) {  // Only send the actual sequence steps
-      const presetChunkNumber = 70 + (i - 30); // Map to preset chunks 70-133
-      const chunk = sequenceChunks[i];
-      
-      const sysex = buildArturiaSysEx([
-        0x01,
-        presetChunkNumber,
-        0x01,
-        0x16,      // Try 0x16 (the other response code)
-        ...chunk
-      ]);
-      
-      this.midiPort.sendSysEx(sysex);
-      await new Promise(resolve => setTimeout(resolve, 10));
-    }
-    
-    console.warn('Sequence chunks sent to edit buffer.');
   }
 
   isConnected(): boolean {

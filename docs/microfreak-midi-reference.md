@@ -236,49 +236,6 @@ Load a preset from slot number (0-127).
 }
 ```
 
-### dump_preset
-Read a complete preset from a specific slot via SysEx. Returns preset metadata including name, category, firmware version, and whether the format is supported. Useful for inspecting existing presets.
-
-```json
-{
-  "name": "dump_preset",
-  "arguments": {
-    "synthId": "microfreak-1",
-    "slot": 100
-  }
-}
-```
-
-Note: Reading a preset takes ~2-3 seconds as it requests 146 data chunks via SysEx.
-
-### scan_presets
-Scan all 256 preset slots and return metadata for each (name, category, empty status). Much faster than dumping full presets as it only reads names.
-
-```json
-{
-  "name": "scan_presets",
-  "arguments": {
-    "synthId": "microfreak-1"
-  }
-}
-```
-
-Note: Scanning all presets takes ~1 minute. Results show which slots are empty/unused.
-
-### find_empty_slots
-Find all empty preset slots (INIT patches or uncategorized presets) that are safe to overwrite. Returns an array of slot numbers.
-
-```json
-{
-  "name": "find_empty_slots",
-  "arguments": {
-    "synthId": "microfreak-1"
-  }
-}
-```
-
-Useful workflow: Find empty slot → Load it → Init → Build sound → Manually save
-
 ## Sound Design Examples
 
 ### Dubstep Wobble Bass
@@ -335,82 +292,8 @@ await set_modulation("Envelope", "Cutoff", 0.5);    // Filter click
 4. **Mod Matrix**: Use `describe_synth` to see full mod matrix capabilities before routing
 5. **Init First**: Call `init` before crafting new sounds to reset all modulations to neutral state
 
-## SysEx Preset Dump/Load
-
-### Message Format
-
-**Arturia Manufacturer ID**: `0x00 0x20 0x6B` (extended format)  
-**MicroFreak Device ID**: `0x07`
-
-### Preset Name Request
-
-```
-F0 00 20 6B 07 01 [seq] 01 19 [bank] [preset] 00 F7
-```
-
-- `seq`: Sequence number (0x00)
-- `bank`: 0 or 1
-- `preset`: 0-127
-
-### Preset Name Response
-
-```
-F0 00 20 6B 07 ... 52 ... [name] ... [category] ... F7
-```
-
-- Response type: `0x52`
-- Name: ASCII string at offset +12, null-terminated
-- Category: Byte at offset +19 (0-10)
-
-### Preset Dump Request
-
-```
-F0 00 20 6B 07 01 01 01 19 [bank] [preset] 01 F7
-```
-
-### Preset Data Chunk Request
-
-```
-F0 00 20 6B 07 01 [chunk] 01 18 00 F7
-```
-
-- `chunk`: Chunk number (0-145)
-- Must be called 40 times minimum, 146 times for complete dump
-- Wait 15ms between requests
-
-### Preset Data Response
-
-```
-F0 00 20 6B 07 ... [0x16|0x17] ... [32 bytes data] ... F7
-```
-
-- Response type: `0x16` or `0x17`
-- Data chunk: 32 bytes starting at offset +8
-- Total message length: 42 bytes
-
-### Implementation Notes
-
-1. **Reading Sequence**:
-   - Send name request
-   - Wait 15ms for response
-   - Send dump request
-   - Wait 15ms
-   - Send 40-146 data chunk requests (one at a time, 15ms between each)
-   - Parse responses to build complete preset
-
-2. **Firmware Detection**:
-   - FW1: `data[0][12] === 0x0C`
-   - FW2: Otherwise (current firmware)
-
-3. **Format Support**:
-   - Some old factory presets use unsupported mod matrix format
-   - Check: `data[16][-7:]` and `data[17][:4]` for specific pattern
-
-4. **Writing Presets**:
-   - Not yet documented/implemented
-   - Requires understanding complete SysEx write protocol
-   - High risk of corrupting synth memory
-
 ## References
 
 - [MicroFreak Manual v5.0](https://www.arturia.com/support/downloads&manuals)
+- [nanassound/midi_ctrl](https://github.com/nanassound/midi_ctrl) - Oscillator mapping research
+- [francoisgeorgy/microfreak-unofficial](https://github.com/francoisgeorgy/microfreak-unofficial) - NRPN documentation
