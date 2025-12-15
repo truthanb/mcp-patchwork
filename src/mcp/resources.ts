@@ -74,7 +74,8 @@ export function listResources(): Array<{
     mimeType: string;
   }> = [];
 
-  for (const synth of synthRegistry.getAll()) {
+  // Only list resources for connected synths
+  for (const synth of synthRegistry.getAll().filter(s => s.isConnected())) {
     resources.push({
       uri: `synth://${synth.id}/params`,
       name: `${synth.name} Parameter Map`,
