@@ -34,7 +34,7 @@ export async function handleListSynths(options?: { rescan?: boolean }): Promise<
     .filter((s) => {
       const connected = s.isConnected();
       if (!connected) {
-        console.error(`[list_synths] ${s.name} (${s.id}) is registered but not connected`);
+        console.warn(`[list_synths] ${s.name} (${s.id}) is registered but not connected`);
       }
       return connected;
     })
@@ -313,7 +313,9 @@ export async function handleDumpPreset(params: {
 
   try {
     const preset = await readPreset(midiPort, params.slot, 146, (current, total) => {
-      console.log(`[MCP] Reading preset ${params.slot}: ${current}/${total} chunks`);
+      if (current % 20 === 0) {
+        console.warn(`[MCP] Reading preset ${params.slot}: ${current}/${total} chunks`);
+      }
     });
 
     if (!preset) {
@@ -369,7 +371,9 @@ export async function handleScanPresets(params: {
 
   try {
     const presets = await scanPresets(midiPort, (current, total) => {
-      console.log(`[MCP] Scanning presets: ${current}/${total}`);
+      if (current % 32 === 0) {
+        console.warn(`[MCP] Scanning presets: ${current}/${total}`);
+      }
     });
 
     return {
@@ -414,8 +418,11 @@ export async function handleFindEmptySlots(params: {
   }
 
   try {
+    console.warn('[MCP] Starting scan of 256 preset slots (this takes ~10 seconds)...');
     const emptySlots = await findEmptySlots(midiPort, (current, total) => {
-      console.log(`[MCP] Scanning for empty slots: ${current}/${total}`);
+      if (current % 32 === 0) {
+        console.warn(`[MCP] Scanning for empty slots: ${current}/${total}`);
+      }
     });
 
     return {

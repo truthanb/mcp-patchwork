@@ -24,7 +24,7 @@ export class VirtualMidiPort {
       this.isOpen = true;
       return true;
     } catch (error) {
-      console.error('Failed to open virtual MIDI port:', error);
+      console.warn('Failed to open virtual MIDI port:', error);
       return false;
     }
   }
@@ -42,7 +42,7 @@ export class VirtualMidiPort {
       this.output.sendMessage(message as [number, number, number]);
       return true;
     } catch (error) {
-      console.error('Failed to send MIDI message:', error);
+      console.warn('Failed to send MIDI message:', error);
       return false;
     }
   }
@@ -102,7 +102,7 @@ export class VirtualMidiPort {
     if (this.isOpen && this.output) {
       this.output.closePort();
       this.isOpen = false;
-      console.log(`Virtual MIDI port "${this.portName}" closed`);
+      console.warn(`Virtual MIDI port "${this.portName}" closed`);
     }
   }
 

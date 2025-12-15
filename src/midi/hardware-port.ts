@@ -33,11 +33,11 @@ export class HardwareMidiPort {
         }
       }
 
-      console.error(`No MIDI port found matching "${this.portName}"`);
-      console.error('Available ports:', listMidiOutputs());
+      console.warn(`No MIDI port found matching "${this.portName}"`);
+      console.warn('Available ports:', listMidiOutputs());
       return false;
     } catch (error) {
-      console.error('Failed to open hardware MIDI port:', error);
+      console.warn('Failed to open hardware MIDI port:', error);
       return false;
     }
   }
@@ -54,7 +54,7 @@ export class HardwareMidiPort {
       this.output.sendMessage(message as [number, number, number]);
       return true;
     } catch (error) {
-      console.error('Failed to send MIDI message:', error);
+      console.warn('Failed to send MIDI message:', error);
       return false;
     }
   }
@@ -137,7 +137,7 @@ export class HardwareMidiPort {
       this.output.sendMessage(message as any);
       return true;
     } catch (error) {
-      console.error('Failed to send SysEx message:', error);
+      console.warn('Failed to send SysEx message:', error);
       return false;
     }
   }
@@ -172,15 +172,15 @@ export class HardwareMidiPort {
             }
           });
           
-          console.log(`Enabled SysEx input on: "${name}" (index ${i})`);
+          console.warn(`Enabled SysEx input on: "${name}" (index ${i})`);
           return true;
         }
       }
 
-      console.error(`No MIDI input port found matching "${this.portName}"`);
+      console.warn(`No MIDI input port found matching "${this.portName}"`);
       return false;
     } catch (error) {
-      console.error('Failed to enable SysEx input:', error);
+      console.warn('Failed to enable SysEx input:', error);
       return false;
     }
   }
@@ -193,7 +193,7 @@ export class HardwareMidiPort {
       this.input.closePort();
       this.input = null;
       this.sysexCallback = null;
-      console.log('SysEx input disabled');
+      console.warn('SysEx input disabled');
     }
   }
 
@@ -203,7 +203,7 @@ export class HardwareMidiPort {
     if (this.isOpen && this.output) {
       this.output.closePort();
       this.isOpen = false;
-      console.log('Hardware MIDI port closed');
+      console.warn('Hardware MIDI port closed');
     }
   }
 

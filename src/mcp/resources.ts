@@ -158,7 +158,7 @@ export function readResource(uri: string): { content: string; mimeType: string }
         mimeType: 'text/markdown',
       };
     } catch (error) {
-      console.error(`[Resources] Failed to read ${doc.name}:`, error);
+      console.warn(`[Resources] Failed to read ${doc.name}:`, error);
       return null;
     }
   }

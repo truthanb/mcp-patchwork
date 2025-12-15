@@ -79,19 +79,19 @@ export class MicroFreakDriver implements SynthAdapter {
   /** Initialize the driver and open MIDI port */
   async initialize(): Promise<boolean> {
     // Auto-detect MicroFreak if no port specified
-    console.error('[MicroFreak] Searching for MIDI port...');
+    console.warn('[MicroFreak] Searching for MIDI port...');
     const targetPort = this.portName ?? findMidiOutput('microfreak') ?? findMidiOutput('arturia');
     
     if (!targetPort) {
-      console.error('[MicroFreak] ERROR: No MIDI port found. Is MicroFreak connected?');
-      console.error('[MicroFreak] Looking for ports matching "microfreak" or "arturia"');
+      console.warn('[MicroFreak] ERROR: No MIDI port found. Is MicroFreak connected?');
+      console.warn('[MicroFreak] Looking for ports matching "microfreak" or "arturia"');
       return false;
     }
 
-    console.error(`[MicroFreak] Found MIDI port: ${targetPort}`);
+    console.warn(`[MicroFreak] Found MIDI port: ${targetPort}`);
     this.midiPort = new HardwareMidiPort(targetPort);
     const opened = this.midiPort.open();
-    console.error(`[MicroFreak] Port open: ${opened}`);
+    console.warn(`[MicroFreak] Port open: ${opened}`);
     return opened;
   }
 
@@ -269,8 +269,8 @@ export class MicroFreakDriver implements SynthAdapter {
 
     const value = getOscillatorTypeValue(typeName);
     if (value === undefined) {
-      console.error(`[MicroFreak] Unknown oscillator type: ${typeName}`);
-      console.error(`[MicroFreak] Available types: ${OSCILLATOR_TYPES.join(', ')}`);
+      console.warn(`[MicroFreak] Unknown oscillator type: ${typeName}`);
+      console.warn(`[MicroFreak] Available types: ${OSCILLATOR_TYPES.join(', ')}`);
       return false;
     }
 
@@ -544,7 +544,7 @@ export class MicroFreakDriver implements SynthAdapter {
     }
 
     // Step 1: Load preset 1 via Program Change to get it into edit buffer
-    console.log('Loading preset 1 into edit buffer...');
+    console.warn('Loading preset 1 into edit buffer...');
     this.midiPort.sendProgramChange(this.midiChannel, 0); // Preset 1 (0-indexed)
     await new Promise(resolve => setTimeout(resolve, 100)); // Wait for preset to load
 
@@ -553,7 +553,7 @@ export class MicroFreakDriver implements SynthAdapter {
     
     // Step 3: Send ONLY the sequence chunks (chunks 70-145 of the preset)
     // sequenceChunks[30-93] map to preset chunks 70-133 (the 64 sequence steps)
-    console.log('Overwriting sequence data...');
+    console.warn('Overwriting sequence data...');
     
     for (let i = 30; i < 94; i++) {  // Only send the actual sequence steps
       const presetChunkNumber = 70 + (i - 30); // Map to preset chunks 70-133
@@ -571,7 +571,7 @@ export class MicroFreakDriver implements SynthAdapter {
       await new Promise(resolve => setTimeout(resolve, 10));
     }
     
-    console.log('Sequence chunks sent to edit buffer.');
+    console.warn('Sequence chunks sent to edit buffer.');
   }
 
   isConnected(): boolean {

@@ -78,7 +78,7 @@ export async function readPreset(
   const bank = slot > 127 ? 1 : 0;
   const presetNumber = slot % 128;
 
-  console.log(`[MicroFreak Preset] Reading slot ${slot} (bank ${bank}, preset ${presetNumber})`);
+  console.warn(`[MicroFreak Preset] Reading slot ${slot} (bank ${bank}, preset ${presetNumber})`);
 
   return new Promise((resolve, reject) => {
     let presetName = '';
@@ -97,7 +97,7 @@ export async function readPreset(
           if (parsed) {
             presetName = parsed.name;
             category = parsed.category;
-            console.log(`[MicroFreak Preset] Got name: "${presetName}", category: ${getCategoryName(parsed.category)}`);
+            console.warn(`[MicroFreak Preset] Got name: "${presetName}", category: ${getCategoryName(parsed.category)}`);
             waitingForName = false;
             waitingForDump = true;
             
@@ -298,8 +298,6 @@ export async function scanPresets(
   const presets: PresetMetadata[] = [];
   const totalSlots = 256;
   
-  console.log('[MicroFreak Preset] Scanning all 256 preset slots...');
-  
   for (let slot = 0; slot < totalSlots; slot++) {
     const bank = slot > 127 ? 1 : 0;
     const presetNumber = slot % 128;
@@ -322,7 +320,6 @@ export async function scanPresets(
     await wait(20);
   }
   
-  console.log(`[MicroFreak Preset] Scan complete: ${presets.length} presets found`);
   return presets;
 }
 
@@ -413,6 +410,5 @@ export async function findEmptySlots(
     .filter(p => p.isEmpty)
     .map(p => p.slot);
   
-  console.log(`[MicroFreak Preset] Found ${emptySlots.length} empty slots:`, emptySlots);
   return emptySlots;
 }
