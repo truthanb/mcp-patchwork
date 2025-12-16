@@ -34,10 +34,11 @@ export interface SynthAdapter {
 
   /**
    * Set a single parameter to a normalized value.
-   * Drivers map canonical params to CC/SysEx internally.
+   * Accepts either canonical params or synth-specific param names from parameterMap.
+   * Drivers should check parameterMap first, then fall back to canonical params.
    * Unsupported params should no-op and return false.
    */
-  setParam(param: CanonicalParam, value: NormalizedValue): Promise<boolean>;
+  setParam(param: CanonicalParam | string, value: NormalizedValue): Promise<boolean>;
 
   /**
    * Set multiple parameters at once.

@@ -82,12 +82,21 @@ export function listResources(): Array<{
       mimeType: 'application/json',
     });
     
-    // Add MIDI reference resource for MicroFreak
+    // Add MIDI reference resource for specific synths
     if (synth.name === 'Arturia MicroFreak') {
       resources.push({
         uri: `synth://${synth.id}/midi-reference`,
         name: `${synth.name} MIDI Reference`,
         description: `Complete MIDI CC and NRPN reference for ${synth.name} including oscillator mappings, mod matrix, and usage examples`,
+        mimeType: 'text/markdown',
+      });
+    }
+    
+    if (synth.name === 'Roland SE-02') {
+      resources.push({
+        uri: `synth://${synth.id}/midi-reference`,
+        name: `${synth.name} MIDI Reference`,
+        description: `Complete MIDI CC reference for ${synth.name} with all 70+ parameters documented`,
         mimeType: 'text/markdown',
       });
     }
@@ -118,7 +127,17 @@ export function readResource(uri: string): { content: string; mimeType: string }
   if (midiRefMatch) {
     const synthId = midiRefMatch[1];
     const synth = synthRegistry.get(synthId);
-    if (!synth || synth.name !== 'Arturia MicroFreak') return null;
+    if (!synth) return null;
+    
+    // Determine which MIDI reference to load
+    let docFilename: string;
+    if (synth.name === 'Arturia MicroFreak') {
+      docFilename = 'microfreak-midi-reference.md';
+    } else if (synth.name === 'Roland SE-02') {
+      docFilename = 'se02-midi-reference.md';
+    } else {
+      return null;
+    }
     
     // Read the MIDI reference markdown file synchronously
     try {
@@ -127,7 +146,7 @@ export function readResource(uri: string): { content: string; mimeType: string }
       const { fileURLToPath } = require('url');
       
       const __dirname = path.dirname(fileURLToPath(import.meta.url));
-      const docPath = path.join(__dirname, '../../docs/microfreak-midi-reference.md');
+      const docPath = path.join(__dirname, '../../docs', docFilename);
       const content = fs.readFileSync(docPath, 'utf-8');
       
       return {

@@ -14,14 +14,7 @@ export const describeSynthSchema = z.object({
 
 /** Schema for set_param tool */
 export const setParamSchema = z.object({
-  param: z.enum([
-    'osc.type', 'osc.mix', 'osc.wave', 'osc.shape',
-    'filter.cutoff', 'filter.resonance', 'filter.type',
-    'env.amp.attack', 'env.amp.decay', 'env.amp.sustain', 'env.amp.release',
-    'env.filter.attack', 'env.filter.decay', 'env.filter.sustain', 'env.filter.release',
-    'lfo1.rate', 'lfo1.amount', 'lfo2.rate', 'lfo2.amount',
-    'fx.mix', 'fx.param1', 'fx.param2',
-  ]).describe('The canonical parameter name'),
+  param: z.string().describe('Parameter name - can be canonical (e.g., filter.cutoff) or synth-specific from parameterMap (e.g., osc1.waveform)'),
   value: z.number().min(0).max(1).describe('Normalized value between 0.0 and 1.0'),
   synthId: z.string().optional().describe('ID of synth to set parameter on'),
 });
@@ -88,21 +81,13 @@ export const toolDefinitions = [
   },
   {
     name: 'set_param',
-    description: 'Set a specific synth parameter to a normalized value (0.0-1.0). Read the synth param resource first to understand what each parameter does.',
+    description: 'Set a synth parameter. Accepts both canonical params (filter.cutoff) and synth-specific params from describe_synth parameterMap (osc1.waveform, osc2.fine, etc.). Check describe_synth for available parameters.',
     inputSchema: {
       type: 'object' as const,
       properties: {
         param: {
           type: 'string',
-          enum: [
-            'osc.type', 'osc.mix', 'osc.wave', 'osc.shape',
-            'filter.cutoff', 'filter.resonance', 'filter.type',
-            'env.amp.attack', 'env.amp.decay', 'env.amp.sustain', 'env.amp.release',
-            'env.filter.attack', 'env.filter.decay', 'env.filter.sustain', 'env.filter.release',
-            'lfo1.rate', 'lfo1.amount', 'lfo2.rate', 'lfo2.amount',
-            'fx.mix', 'fx.param1', 'fx.param2',
-          ],
-          description: 'The canonical parameter name',
+          description: 'Parameter name from parameterMap or canonical params',
         },
         value: {
           type: 'number',

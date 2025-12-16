@@ -78,19 +78,14 @@ export class MicroFreakDriver implements SynthAdapter {
   /** Initialize the driver and open MIDI port */
   async initialize(): Promise<boolean> {
     // Auto-detect MicroFreak if no port specified
-    console.warn('[MicroFreak] Searching for MIDI port...');
     const targetPort = this.portName ?? findMidiOutput('microfreak') ?? findMidiOutput('arturia');
     
     if (!targetPort) {
-      console.warn('[MicroFreak] ERROR: No MIDI port found. Is MicroFreak connected?');
-      console.warn('[MicroFreak] Looking for ports matching "microfreak" or "arturia"');
       return false;
     }
 
-    console.warn(`[MicroFreak] Found MIDI port: ${targetPort}`);
     this.midiPort = new HardwareMidiPort(targetPort);
     const opened = this.midiPort.open();
-    console.warn(`[MicroFreak] Port open: ${opened}`);
     return opened;
   }
 
@@ -108,6 +103,46 @@ export class MicroFreakDriver implements SynthAdapter {
       supportsPresetLoad: true,
       presetSlotCount: 512,
       features: this.getFeatures(),
+      parameterMap: this.getParameterMap(),
+    };
+  }
+
+  /** Get all MicroFreak-specific parameters with CC mappings and descriptions */
+  private getParameterMap(): Record<string, { cc: number; description: string }> {
+    return {
+      // Oscillator Parameters
+      'osc.wave': { cc: MicroFreakCC.OSC_WAVE, description: 'Oscillator wave/shape selection' },
+      'osc.timbre': { cc: MicroFreakCC.OSC_TIMBRE, description: 'Oscillator timbre/color parameter' },
+      'osc.shape': { cc: MicroFreakCC.OSC_SHAPE, description: 'Oscillator shape parameter' },
+      
+      // Filter Parameters
+      'filter.cutoff': { cc: MicroFreakCC.FILTER_CUTOFF, description: 'Filter cutoff frequency' },
+      'filter.resonance': { cc: MicroFreakCC.FILTER_RESONANCE, description: 'Filter resonance/emphasis' },
+      'filter.amount': { cc: MicroFreakCC.FILTER_AMOUNT, description: 'Filter envelope modulation amount' },
+      
+      // Amp Envelope
+      'env.amp.attack': { cc: MicroFreakCC.AMP_ATTACK, description: 'Amp envelope attack time' },
+      'env.amp.decay': { cc: MicroFreakCC.AMP_DECAY, description: 'Amp envelope decay time' },
+      'env.amp.sustain': { cc: MicroFreakCC.AMP_SUSTAIN, description: 'Amp envelope sustain level' },
+      
+      // Cycling Envelope (used as filter/mod envelope)
+      'env.cycling.rise': { cc: MicroFreakCC.CYCLING_RISE, description: 'Cycling envelope rise time' },
+      'env.cycling.fall': { cc: MicroFreakCC.CYCLING_FALL, description: 'Cycling envelope fall time' },
+      'env.cycling.hold': { cc: MicroFreakCC.CYCLING_HOLD, description: 'Cycling envelope hold time' },
+      'env.cycling.amount': { cc: MicroFreakCC.CYCLING_AMOUNT, description: 'Cycling envelope amount' },
+      
+      // LFO
+      'lfo.rate.free': { cc: MicroFreakCC.LFO_RATE_FREE, description: 'LFO rate (free-running mode)' },
+      'lfo.rate.sync': { cc: MicroFreakCC.LFO_RATE_SYNC, description: 'LFO rate (tempo-synced mode)' },
+      
+      // Arpeggiator
+      'arp.rate.free': { cc: MicroFreakCC.ARP_RATE_FREE, description: 'Arpeggiator rate (free-running mode)' },
+      'arp.rate.sync': { cc: MicroFreakCC.ARP_RATE_SYNC, description: 'Arpeggiator rate (tempo-synced mode)' },
+      
+      // Performance
+      'control.glide': { cc: MicroFreakCC.GLIDE, description: 'Portamento/glide time' },
+      'spice': { cc: MicroFreakCC.SPICE, description: 'Spice (randomization) amount' },
+      'keyboard.hold': { cc: MicroFreakCC.KEYBOARD_HOLD, description: 'Keyboard hold/sustain pedal' },
     };
   }
 
@@ -216,12 +251,22 @@ export class MicroFreakDriver implements SynthAdapter {
     this.currentParams.clear();
   }
 
-  async setParam(param: CanonicalParam, value: NormalizedValue): Promise<boolean> {
+  async setParam(param: CanonicalParam | string, value: NormalizedValue): Promise<boolean> {
     if (!this.midiPort) {
       return false;
     }
 
-    const cc = getCCForParam(param);
+    // First check if this is a MicroFreak-specific parameter
+    const paramMap = this.getParameterMap();
+    let cc: number | undefined;
+    
+    if (paramMap[param]) {
+      cc = paramMap[param].cc;
+    } else {
+      // Fall back to canonical parameter mapping
+      cc = getCCForParam(param as CanonicalParam);
+    }
+    
     if (cc === undefined) {
       // Unsupported param - graceful no-op
       return false;
@@ -232,7 +277,7 @@ export class MicroFreakDriver implements SynthAdapter {
     
     const sent = this.midiPort.sendCC(this.midiChannel, cc, ccValue);
     if (sent) {
-      this.currentParams.set(param, clampedValue);
+      this.currentParams.set(param as CanonicalParam, clampedValue);
     }
     return sent;
   }

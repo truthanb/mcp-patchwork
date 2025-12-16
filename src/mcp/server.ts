@@ -33,6 +33,7 @@ import type { CanonicalParam } from '../synth/types.js';
 
 // Import drivers to trigger their factory registration
 import '../drivers/microfreak/index.js';
+import '../drivers/se02/index.js';
 
 const SERVER_NAME = 'patchwork';
 const SERVER_VERSION = '0.1.0';
@@ -41,22 +42,26 @@ const SERVER_VERSION = '0.1.0';
  * Initialize synth drivers and register them.
  */
 async function initializeSynths(): Promise<void> {
-  console.warn('[patchwork] Initializing synth drivers...');
+  const foundSynths: string[] = [];
   
   // Try all registered driver factories
   for (const factory of driverFactoryRegistry.getAll()) {
-    console.warn(`[patchwork] Checking for ${factory.name}...`);
     const driver = await factory.detect();
     if (driver && driver.isConnected()) {
       synthRegistry.register(driver);
-      console.warn(`[patchwork] ✓ Registered synth: ${driver.name} (${driver.id})`);
-    } else {
-      console.warn(`[patchwork] ✗ ${factory.name} not found or not connected`);
+      foundSynths.push(driver.name);
     }
   }
   
-  const synthCount = synthRegistry.getAll().length;
-  console.warn(`[patchwork] Total synths registered: ${synthCount}`);
+  // Print friendly summary
+  if (foundSynths.length === 0) {
+    console.warn('[patchwork] I didn\'t find anything');
+  } else if (foundSynths.length === 1) {
+    console.warn(`[patchwork] I found ${foundSynths[0]}`);
+  } else {
+    const last = foundSynths.pop();
+    console.warn(`[patchwork] I found ${foundSynths.join(', ')} and ${last}`);
+  }
 }
 
 /**
@@ -95,7 +100,10 @@ function createServer(): Server {
 
   // List available resources
   server.setRequestHandler(ListResourcesRequestSchema, async () => {
-    return { resources: listResources() };
+    const resources = listResources();
+    console.warn(`[patchwork] Resources listed: ${resources.length} resources`);
+    resources.forEach(r => console.warn(`  - ${r.name}: ${r.uri}`));
+    return { resources };
   });
 
   // Read a resource
@@ -205,6 +213,11 @@ async function main(): Promise<void> {
 
   // Initialize synth drivers
   await initializeSynths();
+  
+  // Log available resources
+  const resources = listResources();
+  console.warn(`[patchwork] Available resources: ${resources.length}`);
+  resources.forEach(r => console.warn(`  - ${r.name}: ${r.uri}`));
 
   // Create and start server
   const server = createServer();

@@ -85,6 +85,10 @@ export interface SynthCapabilities {
   presetSlotCount?: number;
   /** Synth-specific features with their valid values */
   features: SynthFeature[];
+  /** Detailed parameter map with CC numbers and descriptions */
+  parameterMap?: Record<string, { cc: number; description: string }>;
+  /** High-level controller descriptions */
+  controllerMap?: Record<string, string>;
 }
 
 /** A synth-specific feature that can be set */

@@ -80,7 +80,7 @@ export async function handleDescribeSynth(params: { synthId?: string }): Promise
 
 /** Handler for set_param */
 export async function handleSetParam(params: {
-  param: CanonicalParam;
+  param: string;
   value: number;
   synthId?: string;
 }): Promise<{

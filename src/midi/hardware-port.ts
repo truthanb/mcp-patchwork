@@ -195,6 +195,64 @@ export class HardwareMidiPort {
     }
   }
 
+  /**
+   * Send a SysEx request and wait for response.
+   * Temporarily sets up SysEx listener, sends request, waits for response.
+   * 
+   * @param request SysEx request message
+   * @param timeoutMs Timeout in milliseconds (default 1000)
+   * @returns Promise that resolves with response message or rejects on timeout
+   */
+  async requestSysEx(request: number[], timeoutMs: number = 1000): Promise<number[]> {
+    return new Promise((resolve, reject) => {
+      const wasListening = this.input !== null;
+      let timeoutHandle: NodeJS.Timeout;
+
+      const cleanup = () => {
+        clearTimeout(timeoutHandle);
+        if (!wasListening) {
+          this.disableSysExInput();
+        }
+      };
+
+      // Set up timeout
+      timeoutHandle = setTimeout(() => {
+        cleanup();
+        reject(new Error(`SysEx request timeout after ${timeoutMs}ms`));
+      }, timeoutMs);
+
+      // Set up response handler
+      const handleResponse = (message: number[]) => {
+        cleanup();
+        resolve(message);
+      };
+
+      // Enable input if not already enabled
+      if (!wasListening) {
+        const success = this.enableSysExInput(handleResponse);
+        if (!success) {
+          clearTimeout(timeoutHandle);
+          reject(new Error('Failed to enable SysEx input'));
+          return;
+        }
+      } else {
+        // Temporarily override callback
+        const originalCallback = this.sysexCallback;
+        this.sysexCallback = (message: number[]) => {
+          this.sysexCallback = originalCallback;
+          handleResponse(message);
+        };
+      }
+
+      // Send request
+      const success = this.sendSysEx(request);
+      if (!success) {
+        cleanup();
+        reject(new Error('Failed to send SysEx request'));
+      }
+    });
+  }
+
   /** Close the MIDI port */
   close(): void {
     this.disableSysExInput();
