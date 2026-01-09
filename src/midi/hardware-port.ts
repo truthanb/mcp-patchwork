@@ -10,7 +10,6 @@ export class HardwareMidiPort {
   private output: midi.Output | null = null;
   private input: midi.Input | null = null;
   private isOpen: boolean = false;
-  private portIndex: number = -1;
   private sysexCallback: ((message: number[]) => void) | null = null;
 
   constructor(private portName: string) {}
@@ -27,7 +26,6 @@ export class HardwareMidiPort {
         const name = this.output.getPortName(i);
         if (name.toLowerCase().includes(this.portName.toLowerCase())) {
           this.output.openPort(i);
-          this.portIndex = i;
           this.isOpen = true;
           return true;
         }
@@ -165,7 +163,7 @@ export class HardwareMidiPort {
           this.sysexCallback = callback;
           
           // Set up message listener
-          this.input.on('message', (deltaTime: number, message: number[]) => {
+          this.input.on('message', (_deltaTime: number, message: number[]) => {
             // Check if it's a SysEx message (starts with 0xF0)
             if (message[0] === 0xF0 && this.sysexCallback) {
               this.sysexCallback(message);

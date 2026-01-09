@@ -104,7 +104,6 @@ function parseIdentityReply(message: number[]): void {
 
 function generateParamMapFile(): string {
   const synthName = synthIdentity?.manufacturer ?? 'Unknown';
-  const safeName = synthName.toLowerCase().replace(/[^a-z0-9]/g, '');
   const className = synthName.replace(/[^a-zA-Z0-9]/g, '');
   const version = synthIdentity?.version.join('.') ?? 'unknown';
   
@@ -232,7 +231,7 @@ async function main() {
   console.log('\n🎛️  Listening for CC messages...\n');
 
   // Handle incoming messages
-  input.on('message', (deltaTime: number, message: number[]) => {
+  input.on('message', (_deltaTime: number, message: number[]) => {
     const [status, data1, data2] = message;
     
     // Check for SysEx Identity Reply: F0 7E xx 06 02 ...

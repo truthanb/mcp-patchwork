@@ -23,7 +23,6 @@ import {
   OSCILLATOR_TYPES,
   getOscillatorTypeValue,
   paramToCC,
-  type OscillatorType,
 } from './param-map.js';
 import {
   MOD_SOURCES,
@@ -36,7 +35,6 @@ import {
   type ModSource,
   type ModDestination,
 } from './mod-matrix.js';
-import { buildArturiaSysEx } from '../../midi/sysex.js';
 
 /** Interface for MIDI port (hardware or virtual) */
 interface MidiPort {

@@ -7,7 +7,7 @@
  */
 
 import { HardwareMidiPort, findMidiOutput } from '../midi/hardware-port.js';
-import { buildSE02Request, parseSE02Response } from '../midi/roland-sysex.js';
+import { buildSE02Request } from '../midi/roland-sysex.js';
 
 async function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));

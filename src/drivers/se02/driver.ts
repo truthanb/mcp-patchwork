@@ -17,7 +17,7 @@ import type {
 } from '../../synth/types.js';
 import { HardwareMidiPort, findMidiOutput } from '../../midi/hardware-port.js';
 import { normalizedToCC, clampNormalized } from '../../midi/cc.js';
-import { buildSE02Request, parseSE02Response, parsePresetName } from '../../midi/roland-sysex.js';
+import { buildSE02Request, parseSE02Response } from '../../midi/roland-sysex.js';
 
 /** Interface for MIDI port (hardware or virtual) */
 interface MidiPort {
@@ -369,7 +369,7 @@ export class SE02Driver implements SynthAdapter {
     return ['Sawtooth', 'Triangle', 'Square', 'Pulse', 'Noise'];
   }
 
-  async setModulation(source: string, destination: string, amount: NormalizedValue): Promise<import('../../synth/types.js').ModulationResult> {
+  async setModulation(_source: string, _destination: string, _amount: NormalizedValue): Promise<import('../../synth/types.js').ModulationResult> {
     // SE-02 doesn't have a modulation matrix like MicroFreak
     // Modulation is handled through dedicated controls
     return {

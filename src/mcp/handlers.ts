@@ -6,7 +6,6 @@
  */
 
 import { synthRegistry, type SynthAdapter } from '../synth/adapter.js';
-import type { CanonicalParam } from '../synth/types.js';
 import { readPreset } from '../drivers/microfreak/preset.js';
 import type { HardwareMidiPort } from '../midi/hardware-port.js';
 

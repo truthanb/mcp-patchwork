@@ -94,9 +94,6 @@ export const OSCILLATOR_TYPES = [
 
 export type OscillatorType = typeof OSCILLATOR_TYPES[number];
 
-/** Number of oscillator types */
-const OSC_TYPE_COUNT = OSCILLATOR_TYPES.length; // 22
-
 /**
  * CC values for each oscillator type.
  * Evenly distributed across 0-127 with step size ≈6.05.

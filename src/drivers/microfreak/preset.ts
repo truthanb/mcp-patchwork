@@ -12,7 +12,6 @@ import {
   buildPresetDataRequest,
   parsePresetNameResponse,
   parsePresetDataResponse,
-  PRESET_CATEGORIES,
   getCategoryName,
 } from '../../midi/sysex.js';
 
@@ -86,7 +85,6 @@ export async function readPreset(
     const dataChunks: number[][] = [];
     let currentChunk = 0;
     let waitingForName = true;
-    let waitingForDump = false;
     let waitingForData = false;
     
     // Set up SysEx listener
@@ -99,7 +97,6 @@ export async function readPreset(
             category = parsed.category;
             console.warn(`[MicroFreak Preset] Got name: "${presetName}", category: ${getCategoryName(parsed.category)}`);
             waitingForName = false;
-            waitingForDump = true;
             
             // Request preset dump initialization
             setTimeout(() => {
@@ -108,7 +105,6 @@ export async function readPreset(
               
               // After dump request, start requesting chunks
               setTimeout(() => {
-                waitingForDump = false;
                 waitingForData = true;
                 requestNextChunk();
               }, 15);
@@ -189,22 +185,10 @@ export async function writePreset(
   port: HardwareMidiPort,
   preset: MicroFreakPreset
 ): Promise<boolean> {
-  
+  void port;
+  void preset;
+  // TODO: Implement preset writing.
   return false;
-
-  // TODO: Implement preset writing
-  // The full implementation would:
-  // 1. Build SysEx messages for each data chunk
-  // 2. Send preset name
-  // 3. Send all data chunks
-  // 4. Verify write success
-}
-
-/**
- * Utility: Wait for a specified time.
- */
-function wait(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
@@ -299,9 +283,6 @@ export async function scanPresets(
   const totalSlots = 512;
   
   for (let slot = 0; slot < totalSlots; slot++) {
-    const bank = Math.floor(slot / 128);
-    const presetNumber = slot % 128;
-    
     try {
       // Read just the name (no data chunks)
       const metadata = await readPresetName(port, slot);

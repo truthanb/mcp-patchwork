@@ -12,7 +12,7 @@
  *   Ctrl+C to stop
  */
 
-import { HardwareMidiPort, findMidiOutput, listMidiInputs, listMidiOutputs } from '../midi/hardware-port.js';
+import { HardwareMidiPort, findMidiOutput, listMidiInputs } from '../midi/hardware-port.js';
 
 console.log('🔍 MIDI Snooper - Monitoring MicroFreak MIDI traffic\n');
 
@@ -43,7 +43,6 @@ if (!port.open()) {
   process.exit(1);
 }
 
-let messageCount = 0;
 let sysexCount = 0;
 
 // Enable SysEx monitoring
